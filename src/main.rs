@@ -1,4 +1,5 @@
 extern crate getopts;
+extern crate sha2;
 
 use getopts::Options;
 use std::env;
@@ -7,8 +8,10 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::io;
 
+use sha2::{Sha256, Digest};
+
 pub struct Sha {
-    hash: [u8; 32]
+    hasher: Sha256
 }
 
 fn main() {
@@ -39,25 +42,18 @@ fn hash_file(fname: String) -> io::Result<Sha> {
 
 impl Sha {
     pub fn new() -> Self {
-        Sha { hash: [ 0; 32 ] }
+        Sha { hasher: Sha256::new() }
     }
 
     pub fn update(&mut self, buf : &[u8]) {
-        self.hash[0] ^= buf[0]
+        self.hasher.input(buf);
     }
 
-    pub fn digest(&self) -> Vec<u8> {
-        let mut result = Vec::new();
-        result.extend(&self.hash);
-        result
+    pub fn digest(self) -> Vec<u8> {
+        self.hasher.result().to_vec()
     }
 
-    pub fn hexdigest(&self) -> String {
-        let d = self.digest();
-        let mut r = String::new();
-        for i in 0..32 {
-            r = r + &format!("{:02x}", d[i]).to_string();
-        }
-        r
+    pub fn hexdigest(self) -> String {
+        format!("{:x}", self.hasher.result())
     }
 }
