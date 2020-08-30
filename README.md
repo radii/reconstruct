@@ -28,6 +28,22 @@ representation of `target`, and use diverse inputs on the destination to reduce 
 minimum. Think of `reconstruct` as kind of like asynchronous rsync.
 
 
+Usage
+-----
+
+Generate a reconstruction list:
+```sh
+% rct hash v2.img -o v2.img.rcn
+```
+copy it to the destination host:
+```sh
+% scp v2.img.rcn otherhost:
+```
+Start the reconstruction process:
+```sh
+otherhost% rct build v2.img.rcn -i v1.img -i v1b.img
+```
+
 Hash tree representation
 ------------------------
 
