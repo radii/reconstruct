@@ -12,7 +12,8 @@ use std::io;
 use sha2::{Sha256, Digest};
 
 pub struct Sha {
-    hasher: Sha256
+    hasher: Sha256,
+    v: Vec<u32>
 }
 
 fn main() {
@@ -45,7 +46,6 @@ fn hash_file(fname: String) -> io::Result<Sha> {
     let mut f = File::open(fname)?;
     let mut h = Sha::new();
     let mut buf = [0u8; BUFFER_SIZE];
-    let mut v = Vec::new();
     loop {
         let n = match f.read(&mut buf) {
             Ok(n) => { n }
@@ -53,7 +53,7 @@ fn hash_file(fname: String) -> io::Result<Sha> {
         };
         h.update(&buf[..n]);
         let h0 = short_hash(&buf[..n]);
-        v.push(h0);
+        h.v.push(h0);
         if n == 0 || n < BUFFER_SIZE {
             break;
         }
@@ -63,7 +63,7 @@ fn hash_file(fname: String) -> io::Result<Sha> {
 
 impl Sha {
     pub fn new() -> Self {
-        Sha { hasher: Sha256::new() }
+        Sha { hasher: Sha256::new(), v: Vec::new() }
     }
 
     pub fn update(&mut self, buf : &[u8]) {
@@ -75,6 +75,6 @@ impl Sha {
     }
 
     pub fn hexdigest(self) -> String {
-        format!("{:x}", self.hasher.result())
+        format!("{:x} {}", self.hasher.result(), self.v.len())
     }
 }
