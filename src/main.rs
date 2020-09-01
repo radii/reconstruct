@@ -11,9 +11,12 @@ use std::io;
 
 use sha2::{Sha256, Digest};
 
-pub struct Sha {
+const BUFFER_SIZE : usize = 4096;
+const FANOUT : usize = 256;
+
+pub struct HashTree {
     hasher: Sha256,
-    v: Vec<u32>
+    h0: Vec<u32>
 }
 
 fn main() {
@@ -32,8 +35,6 @@ fn main() {
     println!("{}", h.hexdigest())
 }
 
-const BUFFER_SIZE : usize = 4096;
-
 fn short_hash(buf : &[u8]) -> u32 {
     let mut h = Sha256::new();
     h.input(&buf);
@@ -42,9 +43,9 @@ fn short_hash(buf : &[u8]) -> u32 {
     return u32::from_be_bytes(int_bytes.try_into().unwrap())
 }
 
-fn hash_file(fname: String) -> io::Result<Sha> {
+fn hash_file(fname: String) -> io::Result<HashTree> {
     let mut f = File::open(fname)?;
-    let mut h = Sha::new();
+    let mut h = HashTree::new();
     let mut buf = [0u8; BUFFER_SIZE];
     loop {
         let n = match f.read(&mut buf) {
@@ -52,8 +53,6 @@ fn hash_file(fname: String) -> io::Result<Sha> {
             Err(e) => return Err(e)
         };
         h.update(&buf[..n]);
-        let h0 = short_hash(&buf[..n]);
-        h.v.push(h0);
         if n == 0 || n < BUFFER_SIZE {
             break;
         }
@@ -61,13 +60,15 @@ fn hash_file(fname: String) -> io::Result<Sha> {
     Ok(h)
 }
 
-impl Sha {
+impl HashTree {
     pub fn new() -> Self {
-        Sha { hasher: Sha256::new(), v: Vec::new() }
+        HashTree { hasher: Sha256::new(), h0: Vec::new() }
     }
 
     pub fn update(&mut self, buf : &[u8]) {
         self.hasher.input(buf);
+        let h0 = short_hash(buf);
+        self.h0.push(h0);
     }
 
     pub fn digest(self) -> Vec<u8> {
@@ -75,6 +76,6 @@ impl Sha {
     }
 
     pub fn hexdigest(self) -> String {
-        format!("{:x} {}", self.hasher.result(), self.v.len())
+        format!("{:x} {}", self.hasher.result(), self.h0.len())
     }
 }
