@@ -83,3 +83,13 @@ impl HashTree {
         format!("{:x} {}", self.hasher1.result(), self.h0.len())
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_short_hash() {
+        assert_eq!(short_hash(b"hello"), 0x2cf24dba);
+    }
+}
