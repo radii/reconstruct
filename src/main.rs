@@ -14,8 +14,12 @@ use sha2::{Sha256, Digest};
 const BUFFER_SIZE : usize = 4096;
 const FANOUT : usize = 256;
 
+type Sha256Result = [u8; 32];
+
 pub struct HashTree {
-    hasher: Sha256,
+    htree: Vec<Vec<Sha256Result>>,
+    hasher1: Sha256,
+    h1: Vec<Sha256Result>,
     h0: Vec<u32>
 }
 
@@ -62,20 +66,20 @@ fn hash_file(fname: String) -> io::Result<HashTree> {
 
 impl HashTree {
     pub fn new() -> Self {
-        HashTree { hasher: Sha256::new(), h0: Vec::new() }
+        HashTree { hasher1: Sha256::new(), h0: Vec::new(), h1: Vec::new(), htree: Vec::<Vec<Sha256Result>>::new() }
     }
 
     pub fn update(&mut self, buf : &[u8]) {
-        self.hasher.input(buf);
+        self.hasher1.input(buf);
         let h0 = short_hash(buf);
         self.h0.push(h0);
     }
 
     pub fn digest(self) -> Vec<u8> {
-        self.hasher.result().to_vec()
+        self.hasher1.result().to_vec()
     }
 
     pub fn hexdigest(self) -> String {
-        format!("{:x} {}", self.hasher.result(), self.h0.len())
+        format!("{:x} {}", self.hasher1.result(), self.h0.len())
     }
 }
