@@ -92,4 +92,12 @@ mod test {
     fn test_short_hash() {
         assert_eq!(short_hash(b"hello"), 0x2cf24dba);
     }
+    #[test]
+    fn test_gb() {
+        let mut s = HashTree::new();
+        for i in 0..(1024 * 10) {
+            let b = format!("{:1024}", i).to_string();
+            s.update(&b.into_bytes());
+        }
+    }
 }
